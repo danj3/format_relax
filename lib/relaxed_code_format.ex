@@ -80,14 +80,26 @@ defmodule RelaxedCodeFormat do
 
   def relax_space( tup ) do
     case tup do
+      { :doc_cons, o, c } = j when o in @opens and c in @closes -> j
+
+      {:doc_cons,
+       {:doc_cons,
+        {:doc_cons, "%", atom_or_nil}, "{"},
+        "}"} = j -> j
+
       { :doc_cons, { :doc_break, "", :strict }, c } when c in @closes ->
         { :doc_cons, { :doc_break, " ", :strict }, c }
 
       { :doc_cons, cons, c } when c in @closes ->
         { :doc_cons, relax_space( cons ), { :doc_cons, { :doc_break, " ", :flex }, c } }
 
-      # Open curly, square, paren
-      { ty, c, cons } when c in @opens ->
+      { :doc_cons, {:doc_cons, {:doc_cons, "%", atom_or_nil}, "{"}, conb } = j ->
+        { :doc_cons, {:doc_cons, {:doc_cons, "%", atom_or_nil}, "{"},
+          { :doc_cons, { :doc_break, " ", :flex },
+            relax_space( conb ) } }
+
+        # Open curly, square, paren
+        { ty, c, cons } = j when c in @opens ->
         { ty, c, { :doc_cons, { :doc_break, " ", :flex }, relax_space( cons ) } }
 
       { :doc_cons, cona, conb } ->
