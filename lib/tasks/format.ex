@@ -141,7 +141,7 @@ defmodule Mix.Tasks.FormatRelax do
     { dot_formatter, formatter_opts } = eval_dot_formatter( opts )
 
     { formatter_opts_and_subs, _sources } =
-      eval_deps_and_subdirectories( dot_formatter, [ ], formatter_opts, [ dot_formatter] )
+      eval_deps_and_subdirectories( dot_formatter, [ ], formatter_opts, [ dot_formatter ] )
 
     args
     |> expand_args( dot_formatter, formatter_opts_and_subs )
@@ -157,7 +157,7 @@ defmodule Mix.Tasks.FormatRelax do
     { dot_formatter, formatter_opts } = eval_dot_formatter( opts )
 
     { formatter_opts_and_subs, _sources } =
-      eval_deps_and_subdirectories( dot_formatter, [ ], formatter_opts, [ dot_formatter] )
+      eval_deps_and_subdirectories( dot_formatter, [ ], formatter_opts, [ dot_formatter ] )
 
     split = file |> Path.relative_to_cwd( ) |> Path.split( )
     find_formatter_opts_for_file( split, formatter_opts_and_subs )
@@ -165,7 +165,7 @@ defmodule Mix.Tasks.FormatRelax do
 
   defp eval_dot_formatter( opts ) do
     cond do
-      dot_formatter = opts[ :dot_formatter] ->
+      dot_formatter = opts[ :dot_formatter ] ->
         { dot_formatter, eval_file_with_keyword_list( dot_formatter ) }
 
       File.regular?( ".formatter.exs" ) ->
@@ -220,7 +220,7 @@ defmodule Mix.Tasks.FormatRelax do
          { :ok, { @manifest_vsn, entry, sources } } <- safe_binary_to_term( binary ),
          expanded_sources = Enum.flat_map( sources, &Path.wildcard( &1, match_dot: true ) ),
          false <-
-           Mix.Utils.stale?( [ Mix.Project.config_mtime( ) | expanded_sources], [ manifest] ) do
+           Mix.Utils.stale?( [ Mix.Project.config_mtime( ) | expanded_sources ], [ manifest ] ) do
       { entry, sources }
     else
       _ -> nil
@@ -252,7 +252,7 @@ defmodule Mix.Tasks.FormatRelax do
           dep_dot_formatter = Path.join( dep_path, ".formatter.exs" ),
           File.regular?( dep_dot_formatter ),
           dep_opts = eval_file_with_keyword_list( dep_dot_formatter ),
-          parenless_call <- dep_opts[ :export][ :locals_without_parens] || [ ],
+          parenless_call <- dep_opts[ :export ][ :locals_without_parens ] || [ ],
           uniq: true,
           do: parenless_call
 
@@ -267,8 +267,8 @@ defmodule Mix.Tasks.FormatRelax do
   defp eval_subs_opts( subs, prefix, sources ) do
     { subs, sources } =
       Enum.flat_map_reduce( subs, sources, fn sub, sources ->
-        prefix = Path.join( prefix ++ [ sub] )
-        { Path.wildcard( prefix ), [ Path.join( prefix, ".formatter.exs" ) | sources] }
+        prefix = Path.join( prefix ++ [ sub ] )
+        { Path.wildcard( prefix ), [ Path.join( prefix, ".formatter.exs" ) | sources ] }
       end )
 
     Enum.flat_map_reduce( subs, sources, fn sub, sources ->
@@ -278,9 +278,9 @@ defmodule Mix.Tasks.FormatRelax do
         formatter_opts = eval_file_with_keyword_list( sub_formatter )
 
         { formatter_opts_and_subs, sources } =
-          eval_deps_and_subdirectories( :in_memory, [ sub], formatter_opts, sources )
+          eval_deps_and_subdirectories( :in_memory, [ sub ], formatter_opts, sources )
 
-        { [ { sub, formatter_opts_and_subs }], sources }
+        { [ { sub, formatter_opts_and_subs } ], sources }
       else
         { [ ], sources }
       end
@@ -368,8 +368,8 @@ defmodule Mix.Tasks.FormatRelax do
     end
 
     map =
-      for input <- List.wrap( formatter_opts[ :inputs] ),
-          file <- Path.wildcard( Path.join( prefix ++ [ input] ), match_dot: true ),
+      for input <- List.wrap( formatter_opts[ :inputs ] ),
+          file <- Path.wildcard( Path.join( prefix ++ [ input ] ), match_dot: true ),
           do: { expand_relative_to_cwd( file ), { dot_formatter, formatter_opts } },
           into: %{ }
 
@@ -389,7 +389,7 @@ defmodule Mix.Tasks.FormatRelax do
 
     Enum.reduce( subs, acc, fn { sub, formatter_opts_and_subs }, acc ->
       sub_formatter = Path.join( sub, ".formatter.exs" )
-      expand_dot_inputs( sub_formatter, [ sub], formatter_opts_and_subs, acc )
+      expand_dot_inputs( sub_formatter, [ sub ], formatter_opts_and_subs, acc )
     end )
   end
 
@@ -409,10 +409,10 @@ defmodule Mix.Tasks.FormatRelax do
   end
 
   defp no_entries_in_formatter_opts?( { formatter_opts, subs } ) do
-    is_nil( formatter_opts[ :inputs] ) and subs == [ ]
+    is_nil( formatter_opts[ :inputs ] ) and subs == [ ]
   end
 
-  defp stdin_or_wildcard( "-" ), do: [ :stdin]
+  defp stdin_or_wildcard( "-" ), do: [ :stdin ]
   defp stdin_or_wildcard( path ), do: path |> Path.expand( ) |> Path.wildcard( match_dot: true )
 
   defp read_file( :stdin ) do
@@ -470,21 +470,21 @@ defmodule Mix.Tasks.FormatRelax do
          { :ok, { :exit, _, _, _ } = exit },
          { exits, not_equivalent, not_formatted }
         ) do
-    { [ exit | exits], not_equivalent, not_formatted }
+    { [ exit | exits ], not_equivalent, not_formatted }
   end
 
   defp collect_status( 
          { :ok, { :not_equivalent, file } },
          { exits, not_equivalent, not_formatted }
         ) do
-    { exits, [ file | not_equivalent], not_formatted }
+    { exits, [ file | not_equivalent ], not_formatted }
   end
 
   defp collect_status( 
          { :ok, { :not_formatted, file } },
          { exits, not_equivalent, not_formatted }
         ) do
-    { exits, not_equivalent, [ file | not_formatted] }
+    { exits, not_equivalent, [ file | not_formatted ] }
   end
 
   defp check!( { [ ], [ ], [ ] } ) do
@@ -492,13 +492,13 @@ defmodule Mix.Tasks.FormatRelax do
   end
 
   defp check!( 
-         { [ { :exit, file, exception, stacktrace } | _], _not_equivalent, _not_formatted }
+         { [ { :exit, file, exception, stacktrace } | _ ], _not_equivalent, _not_formatted }
         ) do
     Mix.shell( ).error( "mix format failed for file: #{Path.relative_to_cwd( file ) }" )
     reraise exception, stacktrace
   end
 
-  defp check!( { _exits, [ _ | _] = not_equivalent, _not_formatted } ) do
+  defp check!( { _exits, [ _ | _ ] = not_equivalent, _not_formatted } ) do
     Mix.raise( """
     mix format failed due to --check-equivalent.
     The following files were not equivalent:
@@ -509,7 +509,7 @@ defmodule Mix.Tasks.FormatRelax do
     """ )
   end
 
-  defp check!( { _exits, _not_equivalent, [ _ | _] = not_formatted } ) do
+  defp check!( { _exits, _not_equivalent, [ _ | _ ] = not_formatted } ) do
     Mix.raise( """
     mix format failed due to --check-formatted.
     The following files were not formatted:

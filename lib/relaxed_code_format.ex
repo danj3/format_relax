@@ -58,8 +58,8 @@ defmodule RelaxedCodeFormat do
   @spec format_file!( binary, keyword ) :: iodata
   def format_file!( file, opts \\ [ ] ) when is_binary( file ) and is_list( opts ) do
     string = File.read!( file )
-    formatted = format_string!( string, [ file: file, line: 1] ++ opts )
-    [ formatted, ?\n]
+    formatted = format_string!( string, [ file: file, line: 1 ] ++ opts )
+    [ formatted, ?\n ]
   end
 
   # In order: {, (, [, <<
@@ -74,7 +74,7 @@ defmodule RelaxedCodeFormat do
   @closes [ 
     << 125 >>,
     << 41 >>,
-    << 91 >>,
+    << 93 >>,
     << 62, 62 >>
   ]
 
