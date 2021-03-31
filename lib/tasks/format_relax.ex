@@ -141,25 +141,25 @@ defmodule Mix.Tasks.FormatRelax do
     { dot_formatter, formatter_opts } = eval_dot_formatter( opts )
 
     { formatter_opts_and_subs, _sources } =
-      eval_deps_and_subdirectories( dot_formatter, [ ], formatter_opts, [ dot_formatter ] )
+      eval_deps_and_subdirectories( dot_formatter, [], formatter_opts, [ dot_formatter ] )
 
     args
     |> expand_args( dot_formatter, formatter_opts_and_subs )
     |> Task.async_stream( &format_file( &1, opts ), ordered: false, timeout: 30000 )
-    |> Enum.reduce( { [ ], [ ], [ ] }, &collect_status/2 )
-    |> check!( )
+    |> Enum.reduce( { [], [], [] }, &collect_status/2 )
+    |> check!()
   end
 
   @doc """
   Returns formatter options to be used for the given file.
   """
-  def formatter_opts_for_file( file, opts \\ [ ] ) do
+  def formatter_opts_for_file( file, opts \\ [] ) do
     { dot_formatter, formatter_opts } = eval_dot_formatter( opts )
 
     { formatter_opts_and_subs, _sources } =
-      eval_deps_and_subdirectories( dot_formatter, [ ], formatter_opts, [ dot_formatter ] )
+      eval_deps_and_subdirectories( dot_formatter, [], formatter_opts, [ dot_formatter ] )
 
-    split = file |> Path.relative_to_cwd( ) |> Path.split( )
+    split = file |> Path.relative_to_cwd() |> Path.split()
     find_formatter_opts_for_file( split, formatter_opts_and_subs )
   end
 
@@ -172,7 +172,7 @@ defmodule Mix.Tasks.FormatRelax do
         { ".formatter.exs", eval_file_with_keyword_list( ".formatter.exs" ) }
 
       true ->
-        { ".formatter.exs", [ ] }
+        { ".formatter.exs", [] }
     end
   end
 
@@ -180,25 +180,25 @@ defmodule Mix.Tasks.FormatRelax do
   # dependencies and subdirectories and deals with caching the result
   # of reading such configuration in a manifest file.
   defp eval_deps_and_subdirectories( dot_formatter, prefix, formatter_opts, sources ) do
-    deps = Keyword.get( formatter_opts, :import_deps, [ ] )
-    subs = Keyword.get( formatter_opts, :subdirectories, [ ] )
+    deps = Keyword.get( formatter_opts, :import_deps, [] )
+    subs = Keyword.get( formatter_opts, :subdirectories, [] )
 
     if not is_list( deps ) do
       Mix.raise( 
-        "Expected :import_deps to return a list of dependencies, got: #{inspect( deps ) }"
+        "Expected :import_deps to return a list of dependencies, got: #{ inspect(deps) }"
        )
     end
 
     if not is_list( subs ) do
       Mix.raise( 
-        "Expected :subdirectories to return a list of directories, got: #{inspect( subs ) }"
+        "Expected :subdirectories to return a list of directories, got: #{ inspect(subs) }"
        )
     end
 
-    if deps == [ ] and subs == [ ] do
-      { { formatter_opts, [ ] }, sources }
+    if deps == [] and subs == [] do
+      { { formatter_opts, [] }, sources }
     else
-      manifest = Path.join( Mix.Project.manifest_path( ), @manifest )
+      manifest = Path.join( Mix.Project.manifest_path(), @manifest )
 
       maybe_cache_in_manifest( dot_formatter, manifest, fn ->
         { subdirectories, sources } = eval_subs_opts( subs, prefix, sources )
@@ -209,9 +209,9 @@ defmodule Mix.Tasks.FormatRelax do
 
   defp maybe_cache_in_manifest( dot_formatter, manifest, fun ) do
     cond do
-      is_nil( Mix.Project.get( ) ) or dot_formatter != ".formatter.exs" -> fun.( )
+      is_nil( Mix.Project.get() ) or dot_formatter != ".formatter.exs" -> fun.()
       entry = read_manifest( manifest ) -> entry
-      true -> write_manifest!( manifest, fun.( ) )
+      true -> write_manifest!( manifest, fun.() )
     end
   end
 
@@ -220,7 +220,7 @@ defmodule Mix.Tasks.FormatRelax do
          { :ok, { @manifest_vsn, entry, sources } } <- safe_binary_to_term( binary ),
          expanded_sources = Enum.flat_map( sources, &Path.wildcard( &1, match_dot: true ) ),
          false <-
-           Mix.Utils.stale?( [ Mix.Project.config_mtime( ) | expanded_sources ], [ manifest ] ) do
+           Mix.Utils.stale?( [ Mix.Project.config_mtime() | expanded_sources ], [ manifest ] ) do
       { entry, sources }
     else
       _ -> nil
@@ -239,12 +239,12 @@ defmodule Mix.Tasks.FormatRelax do
     { entry, sources }
   end
 
-  defp eval_deps_opts( formatter_opts, [ ] ) do
+  defp eval_deps_opts( formatter_opts, [] ) do
     formatter_opts
   end
 
   defp eval_deps_opts( formatter_opts, deps ) do
-    deps_paths = Mix.Project.deps_paths( )
+    deps_paths = Mix.Project.deps_paths()
 
     parenless_calls =
       for dep <- deps,
@@ -252,7 +252,7 @@ defmodule Mix.Tasks.FormatRelax do
           dep_dot_formatter = Path.join( dep_path, ".formatter.exs" ),
           File.regular?( dep_dot_formatter ),
           dep_opts = eval_file_with_keyword_list( dep_dot_formatter ),
-          parenless_call <- dep_opts[ :export ][ :locals_without_parens ] || [ ],
+          parenless_call <- dep_opts[ :export ][ :locals_without_parens ] || [],
           uniq: true,
           do: parenless_call
 
@@ -268,7 +268,7 @@ defmodule Mix.Tasks.FormatRelax do
     { subs, sources } =
       Enum.flat_map_reduce( subs, sources, fn sub, sources ->
         prefix = Path.join( prefix ++ [ sub ] )
-        { Path.wildcard( prefix ), [ Path.join( prefix, ".formatter.exs" ) | sources ] }
+        { Path.wildcard( prefix ), [ Path.join(prefix, ".formatter.exs") | sources ] }
       end )
 
     Enum.flat_map_reduce( subs, sources, fn sub, sources ->
@@ -280,9 +280,9 @@ defmodule Mix.Tasks.FormatRelax do
         { formatter_opts_and_subs, sources } =
           eval_deps_and_subdirectories( :in_memory, [ sub ], formatter_opts, sources )
 
-        { [ { sub, formatter_opts_and_subs } ], sources }
+        { [ {sub, formatter_opts_and_subs} ], sources }
       else
-        { [ ], sources }
+        { [], sources }
       end
     end )
   end
@@ -294,38 +294,34 @@ defmodule Mix.Tasks.FormatRelax do
           path
         else
           Mix.raise( 
-            "Unavailable dependency #{inspect( dep ) } given to :import_deps in the formatter configuration. " <>
+            "Unavailable dependency #{ inspect(dep) } given to :import_deps in the formatter configuration. " <>
               "The dependency cannot be found in the file system, please run \"mix deps.get\" and try again"
            )
         end
 
       :error ->
         Mix.raise( 
-          "Unknown dependency #{inspect( dep ) } given to :import_deps in the formatter configuration. " <>
-            "The dependency is not listed in your mix.exs for environment #{
-              inspect( Mix.env( ) )
-            }"
+          "Unknown dependency #{ inspect(dep) } given to :import_deps in the formatter configuration. " <>
+            "The dependency is not listed in your mix.exs for environment #{ inspect(Mix.env()) }"
          )
     end
   end
 
   defp assert_valid_dep_and_fetch_path( dep, _deps_paths ) do
-    Mix.raise( "Dependencies in :import_deps should be atoms, got: #{inspect( dep ) }" )
+    Mix.raise( "Dependencies in :import_deps should be atoms, got: #{ inspect(dep) }" )
   end
 
   defp eval_file_with_keyword_list( path ) do
     { opts, _ } = Code.eval_file( path )
 
     unless Keyword.keyword?( opts ) do
-      Mix.raise( 
-        "Expected #{inspect( path ) } to return a keyword list, got: #{inspect( opts ) }"
-       )
+      Mix.raise( "Expected #{ inspect(path) } to return a keyword list, got: #{ inspect(opts) }" )
     end
 
     opts
   end
 
-  defp expand_args( [ ], dot_formatter, formatter_opts_and_subs ) do
+  defp expand_args( [], dot_formatter, formatter_opts_and_subs ) do
     if no_entries_in_formatter_opts?( formatter_opts_and_subs ) do
       Mix.raise( 
         "Expected one or more files/patterns to be given to mix format " <>
@@ -334,7 +330,7 @@ defmodule Mix.Tasks.FormatRelax do
     end
 
     dot_formatter
-    |> expand_dot_inputs( [ ], formatter_opts_and_subs, %{ } )
+    |> expand_dot_inputs( [], formatter_opts_and_subs, %{} )
     |> Enum.map( fn { file, { _dot_formatter, formatter_opts } } -> { file, formatter_opts } end )
   end
 
@@ -345,10 +341,10 @@ defmodule Mix.Tasks.FormatRelax do
           uniq: true,
           do: file
 
-    if files == [ ] do
+    if files == [] do
       Mix.raise( 
         "Could not find a file to format. The files/patterns given to command line " <>
-          "did not point to any existing file. Got: #{inspect( files_and_patterns ) }"
+          "did not point to any existing file. Got: #{ inspect(files_and_patterns) }"
        )
     end
 
@@ -356,7 +352,7 @@ defmodule Mix.Tasks.FormatRelax do
       if file == :stdin do
         { file, formatter_opts }
       else
-        split = file |> Path.relative_to_cwd( ) |> Path.split( )
+        split = file |> Path.relative_to_cwd() |> Path.split()
         { file, find_formatter_opts_for_file( split, { formatter_opts, subs } ) }
       end
     end
@@ -364,24 +360,23 @@ defmodule Mix.Tasks.FormatRelax do
 
   defp expand_dot_inputs( dot_formatter, prefix, { formatter_opts, subs }, acc ) do
     if no_entries_in_formatter_opts?( { formatter_opts, subs } ) do
-      Mix.raise( "Expected :inputs or :subdirectories key in #{dot_formatter }" )
+      Mix.raise( "Expected :inputs or :subdirectories key in #{ dot_formatter }" )
     end
 
     map =
       for input <- List.wrap( formatter_opts[ :inputs ] ),
           file <- Path.wildcard( Path.join( prefix ++ [ input ] ), match_dot: true ),
           do: { expand_relative_to_cwd( file ), { dot_formatter, formatter_opts } },
-          into: %{ }
+          into: %{}
 
     acc =
       Map.merge( acc, map, fn file, { dot_formatter1, _ }, { dot_formatter2, formatter_opts } ->
-        Mix.shell(
-        ).error( 
-          "Both #{dot_formatter1 } and #{dot_formatter2 } specify the file " <>
-            "#{Path.relative_to_cwd( file ) } in their :inputs option. To resolve the " <>
-            "conflict, the configuration in #{dot_formatter1 } will be ignored. " <>
+        Mix.shell().error( 
+          "Both #{ dot_formatter1 } and #{ dot_formatter2 } specify the file " <>
+            "#{ Path.relative_to_cwd(file) } in their :inputs option. To resolve the " <>
+            "conflict, the configuration in #{ dot_formatter1 } will be ignored. " <>
             "Please change the list of :inputs in one of the formatter files so only " <>
-            "one of them matches #{Path.relative_to_cwd( file ) }"
+            "one of them matches #{ Path.relative_to_cwd(file) }"
          )
 
         { dot_formatter2, formatter_opts }
@@ -394,7 +389,7 @@ defmodule Mix.Tasks.FormatRelax do
   end
 
   defp expand_relative_to_cwd( path ) do
-    case File.cwd( ) do
+    case File.cwd() do
       { :ok, cwd } -> Path.expand( path, cwd )
       _ -> path
     end
@@ -409,14 +404,14 @@ defmodule Mix.Tasks.FormatRelax do
   end
 
   defp no_entries_in_formatter_opts?( { formatter_opts, subs } ) do
-    is_nil( formatter_opts[ :inputs ] ) and subs == [ ]
+    is_nil( formatter_opts[ :inputs ] ) and subs == []
   end
 
   defp stdin_or_wildcard( "-" ), do: [ :stdin ]
-  defp stdin_or_wildcard( path ), do: path |> Path.expand( ) |> Path.wildcard( match_dot: true )
+  defp stdin_or_wildcard( path ), do: path |> Path.expand() |> Path.wildcard( match_dot: true )
 
   defp read_file( :stdin ) do
-    { IO.stream( :stdio, :line ) |> Enum.to_list( ) |> IO.iodata_to_binary( ), file: "stdin" }
+    { IO.stream( :stdio, :line ) |> Enum.to_list() |> IO.iodata_to_binary(), file: "stdin" }
   end
 
   defp read_file( file ) do
@@ -427,8 +422,8 @@ defmodule Mix.Tasks.FormatRelax do
     { input, extra_opts } = read_file( file )
 
     output =
-      IO.iodata_to_binary( [ 
-        FormatRelax.format_string!( input, extra_opts ++ formatter_opts ),
+      IO.iodata_to_binary( [
+        FormatRelax.format_string!(input, extra_opts ++ formatter_opts),
         ?\n
       ] )
 
@@ -487,17 +482,19 @@ defmodule Mix.Tasks.FormatRelax do
     { exits, not_equivalent, [ file | not_formatted ] }
   end
 
-  defp check!( { [ ], [ ], [ ] } ) do
+  defp check!( { [], [], [] } ) do
     :ok
   end
 
-  defp check!({[{:exit, :stdin, exception, stacktrace} | _], _not_equivalent, _not_formatted}) do
-    Mix.shell().error("mix format failed for stdin")
+  defp check!( 
+         { [ {:exit, :stdin, exception, stacktrace} | _ ], _not_equivalent, _not_formatted }
+        ) do
+    Mix.shell().error( "mix format failed for stdin" )
     reraise exception, stacktrace
   end
 
-  defp check!({[{:exit, file, exception, stacktrace} | _], _not_equivalent, _not_formatted}) do
-    Mix.shell().error("mix format failed for file: #{Path.relative_to_cwd(file)}")
+  defp check!( { [ {:exit, file, exception, stacktrace} | _ ], _not_equivalent, _not_formatted } ) do
+    Mix.shell().error( "mix format failed for file: #{ Path.relative_to_cwd(file) }" )
     reraise exception, stacktrace
   end
 
@@ -506,7 +503,7 @@ defmodule Mix.Tasks.FormatRelax do
     mix format failed due to --check-equivalent.
     The following files are not equivalent:
 
-    #{to_bullet_list( not_equivalent ) }
+    #{ to_bullet_list(not_equivalent) }
 
     Please report this bug with the input files at github.com/elixir-lang/elixir/issues
     """ )
@@ -517,12 +514,12 @@ defmodule Mix.Tasks.FormatRelax do
     mix format failed due to --check-formatted.
     The following files are not formatted:
 
-    #{to_bullet_list( not_formatted ) }
+    #{ to_bullet_list(not_formatted) }
     """ )
   end
 
-  defp to_bullet_list(files) do
-    Enum.map_join(files, "\n", &"  * #{&1 |> to_string() |> Path.relative_to_cwd()}")
+  defp to_bullet_list( files ) do
+    Enum.map_join( files, "\n", &"  * #{ &1 |> to_string() |> Path.relative_to_cwd() }" )
   end
 
   defp equivalent?( input, output ) do

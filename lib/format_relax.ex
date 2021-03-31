@@ -79,16 +79,67 @@ defmodule FormatRelax do
   ]
 
   def relax_space( tup ) do
+    # to develop a new case, uncomment this inspect
+    # IO.inspect( tup )
+    
     case tup do
-      { :doc_cons, o, c } = j when o in @opens and c in @closes -> j
+      # []
+      { :doc_cons, o, c } = j when o in @opens and c in @closes ->
+        j
+
+      # sample1
+      # , []
+      {:doc_cons, o, {:doc_cons, c, ","}} = j when o in @opens and c in @closes ->
+        j
+
+      # sample2
+      # [X:a ]
+      {:doc_cons, o,
+        {:doc_cons, {:doc_break, "", :strict},
+          {:doc_group, cons, :self}}} when o in @opens ->
+      
+        {:doc_cons, o,
+          {:doc_cons, {:doc_break, " ", :strict},
+            {:doc_group, cons, :self}}}
+
+      # sample2
+      # [X:a, :b ]
+      {:doc_cons, o,
+        {:doc_cons, {:doc_break, "", :strict},
+          {:doc_cons, {:doc_group, _group, :self} = group, cons }
+        }
+      } when o in @opens ->
+        {:doc_cons, o,
+          {:doc_cons, {:doc_break, " ", :strict},
+            { :doc_cons, group, cons }
+          }
+        }
+
+      # sample3
+      # "#{X:a }"
+      {:doc_cons, "\#{",
+        {:doc_cons, {:doc_break, "", :strict},
+          {:doc_group, group, cons } } } ->
+
+        {:doc_cons, "\#{",
+          {:doc_cons, {:doc_break, " ", :strict},
+          {:doc_group, group, cons } } }  
 
       {:doc_cons,
-       {:doc_cons,
-        {:doc_cons, "%", _atom_or_nil}, "{"},
-        "}"} = j -> j
+        {:doc_cons,
+          {:doc_cons, "%", _atom_or_nil},
+          "{"
+        },
+        "}"
+      } = j ->
+        j
 
       { :doc_cons, { :doc_break, "", :strict }, c } when c in @closes ->
         { :doc_cons, { :doc_break, " ", :strict }, c }
+
+      {:doc_cons, o,
+        {:doc_cons, {:doc_break, "", :strict}, _ } } = j when o in @opens ->
+        j
 
       { :doc_cons, cons, c } when c in @closes ->
         { :doc_cons, relax_space( cons ), { :doc_cons, { :doc_break, " ", :flex }, c } }
@@ -98,8 +149,9 @@ defmodule FormatRelax do
           { :doc_cons, { :doc_break, " ", :flex },
             relax_space( conb ) } }
 
-        # Open curly, square, paren
-        { ty, c, cons } when c in @opens ->
+
+      # Open curly, square, paren
+      { ty, c, cons } when c in @opens ->
         { ty, c, { :doc_cons, { :doc_break, " ", :flex }, relax_space( cons ) } }
 
       { :doc_cons, cona, conb } ->
