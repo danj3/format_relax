@@ -6,24 +6,24 @@ defmodule Mix.Tasks.FormatRelax do
   @moduledoc """
   Formats the given files and patterns.
 
-      mix format mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
+      mix format_relax mix.exs "lib/**/*.{ex,exs}" "test/**/*.{ex,exs}"
 
   If any of the files is `-`, then the output is read from stdin
   and written to stdout.
 
   ## Formatting options
 
-  The formatter will read a `.formatter.exs` in the current directory for
+  The formatter will read a `.formatter.exs` file in the current directory for
   formatter configuration. Evaluating this file should return a keyword list.
 
-  Here is an example `.formatter.exs` that works as a starting point:
+  Here is an example of a `.formatter.exs` file that works as a starting point:
 
       [
         inputs: ["{mix,.formatter}.exs", "{config,lib,test}/**/*.{ex,exs}"]
       ]
 
   Besides the options listed in `Code.format_string!/2`, the `.formatter.exs`
-  supports the following options:
+  file supports the following options:
 
     * `:inputs` (a list of paths and patterns) - specifies the default inputs
       to be used by this task. For example, `["mix.exs", "{config,lib,test}/**/*.{ex,exs}"]`.
@@ -64,8 +64,8 @@ defmodule Mix.Tasks.FormatRelax do
     * `--dry-run` - does not save files after formatting.
 
     * `--dot-formatter` - path to the file with formatter configuration.
-      Defaults to `.formatter.exs` if one is available. See the "`.formatter.exs`"
-      section for more information.
+      Defaults to `.formatter.exs` if one is available. See the "Formatting options"
+      section above for more information.
 
   If any of the `--check-*` options are given and a check fails, the formatted
   contents won't be written to disk nor printed to standard output.
@@ -84,7 +84,7 @@ defmodule Mix.Tasks.FormatRelax do
 
   It is also possible to format code across the whole project by passing a list
   of patterns and files to `mix format`, as shown at the top of this task
-  documentation. This list can also be set in the `.formatter.exs` under the
+  documentation. This list can also be set in the `.formatter.exs` file under the
   `:inputs` key.
 
   ## Importing dependencies configuration
@@ -101,7 +101,7 @@ defmodule Mix.Tasks.FormatRelax do
   a dependency can be imported in a project by listing that dependency in the
   `:import_deps` option of the formatter configuration file of the project.
 
-  For example, consider I have a project `my_app` that depends on `my_dep`.
+  For example, consider you have a project called `my_app` that depends on another one called `my_dep`.
   `my_dep` wants to export some configuration, so `my_dep/.formatter.exs`
   would look like this:
 
@@ -125,7 +125,7 @@ defmodule Mix.Tasks.FormatRelax do
 
   """
 
-  @switches [ 
+  @switches [
     check_equivalent: :boolean,
     check_formatted: :boolean,
     dot_formatter: :string,
@@ -428,7 +428,7 @@ defmodule Mix.Tasks.FormatRelax do
 
     output =
       IO.iodata_to_binary( [ 
-        RelaxedCodeFormat.format_string!( input, extra_opts ++ formatter_opts ),
+        FormatRelax.format_string!( input, extra_opts ++ formatter_opts ),
         ?\n
       ] )
 
@@ -491,17 +491,20 @@ defmodule Mix.Tasks.FormatRelax do
     :ok
   end
 
-  defp check!( 
-         { [ { :exit, file, exception, stacktrace } | _ ], _not_equivalent, _not_formatted }
-        ) do
-    Mix.shell( ).error( "mix format failed for file: #{Path.relative_to_cwd( file ) }" )
+  defp check!({[{:exit, :stdin, exception, stacktrace} | _], _not_equivalent, _not_formatted}) do
+    Mix.shell().error("mix format failed for stdin")
+    reraise exception, stacktrace
+  end
+
+  defp check!({[{:exit, file, exception, stacktrace} | _], _not_equivalent, _not_formatted}) do
+    Mix.shell().error("mix format failed for file: #{Path.relative_to_cwd(file)}")
     reraise exception, stacktrace
   end
 
   defp check!( { _exits, [ _ | _ ] = not_equivalent, _not_formatted } ) do
     Mix.raise( """
     mix format failed due to --check-equivalent.
-    The following files were not equivalent:
+    The following files are not equivalent:
 
     #{to_bullet_list( not_equivalent ) }
 
@@ -512,14 +515,14 @@ defmodule Mix.Tasks.FormatRelax do
   defp check!( { _exits, _not_equivalent, [ _ | _ ] = not_formatted } ) do
     Mix.raise( """
     mix format failed due to --check-formatted.
-    The following files were not formatted:
+    The following files are not formatted:
 
     #{to_bullet_list( not_formatted ) }
     """ )
   end
 
-  defp to_bullet_list( files ) do
-    Enum.map_join( files, "\n", &"  * #{&1 }" )
+  defp to_bullet_list(files) do
+    Enum.map_join(files, "\n", &"  * #{&1 |> to_string() |> Path.relative_to_cwd()}")
   end
 
   defp equivalent?( input, output ) do

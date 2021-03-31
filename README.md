@@ -1,21 +1,22 @@
-# RelaxedCodeFormat
+# FormatRelax
 
-**TODO: Add description**
+A code format variation that adds spacing inside (),{},[] to enhance
+readability.
 
 ## Installation
 
 If [available in Hex](https://hex.pm/docs/publish), the package can be installed
-by adding `relaxed_code_format` to your list of dependencies in `mix.exs`:
+by adding `format_relax` to your list of dependencies in `mix.exs`:
 
 ```elixir
 def deps do
   [
-    {:relaxed_code_format, "~> 0.1.0"}
+    {:format_relax, "~> 1.0.0"}
   ]
 end
 ```
 
 Documentation can be generated with [ExDoc](https://github.com/elixir-lang/ex_doc)
 and published on [HexDocs](https://hexdocs.pm). Once published, the docs can
-be found at [https://hexdocs.pm/relaxed_code_format](https://hexdocs.pm/relaxed_code_format).
+be found at [https://hexdocs.pm/format_relax](https://hexdocs.pm/format_relax).
 

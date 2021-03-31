@@ -1,4 +1,4 @@
-defmodule RelaxedCodeFormat do
+defmodule FormatRelax do
   @moduledoc """
   A Code format variant that relaxes spacing between syntaxtic punctuation
   and names. Adds spaces before/after (, {, [, << which makes code easier
@@ -84,7 +84,7 @@ defmodule RelaxedCodeFormat do
 
       {:doc_cons,
        {:doc_cons,
-        {:doc_cons, "%", atom_or_nil}, "{"},
+        {:doc_cons, "%", _atom_or_nil}, "{"},
         "}"} = j -> j
 
       { :doc_cons, { :doc_break, "", :strict }, c } when c in @closes ->
@@ -93,13 +93,13 @@ defmodule RelaxedCodeFormat do
       { :doc_cons, cons, c } when c in @closes ->
         { :doc_cons, relax_space( cons ), { :doc_cons, { :doc_break, " ", :flex }, c } }
 
-      { :doc_cons, {:doc_cons, {:doc_cons, "%", atom_or_nil}, "{"}, conb } = j ->
+      { :doc_cons, {:doc_cons, {:doc_cons, "%", atom_or_nil}, "{"}, conb } ->
         { :doc_cons, {:doc_cons, {:doc_cons, "%", atom_or_nil}, "{"},
           { :doc_cons, { :doc_break, " ", :flex },
             relax_space( conb ) } }
 
         # Open curly, square, paren
-        { ty, c, cons } = j when c in @opens ->
+        { ty, c, cons } when c in @opens ->
         { ty, c, { :doc_cons, { :doc_break, " ", :flex }, relax_space( cons ) } }
 
       { :doc_cons, cona, conb } ->
